@@ -1,354 +1,724 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>SimpleGST</title>
-    <meta name="theme-color" content="#ffffff">
-    <meta name="description" content="SimpleGST — quick GST calculator for Indian tax slabs. Works offline, installable.">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>SimpleGST2</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: #dfe3e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8f8f8;
-            color: #000;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+      /* ---------- App shell ---------- */
+      .app {
+        position: relative;
+        width: 100%;
+        max-width: 430px;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        transition: background .25s ease, color .25s ease;
+      }
+      @media (min-width: 560px) and (min-height: 720px) {
+        .app {
+          height: min(880px, 94dvh);
+          border-radius: 38px;
+          border: 1px solid rgba(0,0,0,.18);
+          box-shadow: 0 30px 80px rgba(15, 23, 32, .35), 0 4px 18px rgba(15,23,32,.2);
         }
+      }
 
-        .calculator {
-            background-color: #fff;
-            color: #000;
-            border-radius: 12px;
-            border: 2px solid #e0e0e0;
-            padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            max-width: 480px;
-            width: 100%;
-            margin-bottom: 30px;
-        }
+      /* ---------- Theme tokens ---------- */
+      /* App — native app look */
+      .app[data-ui="app"] {
+        --bg: #f2f5f3;
+        --surface: #ffffff;
+        --ink: #14201b;
+        --muted: #5f7269;
+        --line: #e0e7e3;
+        --accent: #0b7a5c;
+        --accent-ink: #ffffff;
+        --accent-soft: #e2f2ec;
+        --appbar-bg: #0b7a5c;
+        --appbar-ink: #ffffff;
+        --bar-bg: #ffffff;
+        --field-bg: #f4f8f6;
+        --field-line: #c9d8d1;
+        --radius: 16px;
+        --border-w: 1.5px;
+        --label-transform: none;
+        --label-spacing: 0;
+        --label-size: 13.5px;
+        --shadow: 0 2px 10px rgba(16, 42, 33, .08);
+        --seg-track: #e4ece8;
+        --seg-on: #ffffff;
+        --tab-active: #0b7a5c;
+      }
+      /* Classic — original minimal black & white */
+      .app[data-ui="classic"] {
+        --bg: #f8f8f8;
+        --surface: #ffffff;
+        --ink: #000000;
+        --muted: #666666;
+        --line: #e6e6e6;
+        --accent: #000000;
+        --accent-ink: #ffffff;
+        --accent-soft: #f0f0f0;
+        --appbar-bg: #ffffff;
+        --appbar-ink: #000000;
+        --bar-bg: #ffffff;
+        --field-bg: #ffffff;
+        --field-line: #000000;
+        --radius: 6px;
+        --border-w: 2px;
+        --label-transform: uppercase;
+        --label-spacing: .6px;
+        --label-size: 12.5px;
+        --shadow: 0 8px 28px rgba(0,0,0,.08);
+        --seg-track: #ffffff;
+        --seg-on: #000000;
+        --tab-active: #000000;
+      }
+      /* Colourful — light colours */
+      .app[data-ui="colourful"] {
+        --bg: #fdf4e7;
+        --surface: #ffffff;
+        --ink: #3d2c1e;
+        --muted: #96785c;
+        --line: #f3e3cd;
+        --accent: #e2622b;
+        --accent-ink: #ffffff;
+        --accent-soft: #fdeadb;
+        --appbar-bg: #ffd9bd;
+        --appbar-ink: #4a2c14;
+        --bar-bg: #fffaf3;
+        --field-bg: #fff8ef;
+        --field-line: #f0cf9f;
+        --radius: 20px;
+        --border-w: 1.5px;
+        --label-transform: none;
+        --label-spacing: 0;
+        --label-size: 13.5px;
+        --shadow: 0 3px 12px rgba(190, 110, 40, .12);
+        --seg-track: #fdeeda;
+        --seg-on: #ffffff;
+        --tab-active: #e2622b;
+      }
+      /* iOS — grouped lists, iOS blue */
+      .app[data-ui="ios"] {
+        --bg: #f2f2f7;
+        --surface: #ffffff;
+        --ink: #000000;
+        --muted: #8a8a8e;
+        --line: #e5e5ea;
+        --accent: #007aff;
+        --accent-ink: #ffffff;
+        --accent-soft: #e8f2ff;
+        --appbar-bg: rgba(249,249,251,.92);
+        --appbar-ink: #000000;
+        --bar-bg: rgba(249,249,251,.94);
+        --field-bg: #f2f2f7;
+        --field-line: #e5e5ea;
+        --radius: 12px;
+        --border-w: 1px;
+        --label-transform: none;
+        --label-spacing: 0;
+        --label-size: 13px;
+        --shadow: none;
+        --seg-track: #e3e3e8;
+        --seg-on: #ffffff;
+        --tab-active: #007aff;
+      }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: 300;
-            letter-spacing: -0.5px;
-        }
+      /* ---------- Status bar ---------- */
+      .statusbar {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 22px 2px;
+        background: var(--appbar-bg);
+        color: var(--appbar-ink);
+        font-size: 13.5px;
+        font-weight: 600;
+        letter-spacing: .2px;
+      }
+      .statusbar .sicons { display: flex; align-items: center; gap: 6px; }
+      .statusbar svg { display: block; fill: currentColor; }
 
-        .input-group {
-            margin-bottom: 25px;
-        }
+      /* ---------- App bar ---------- */
+      .appbar {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 16px 14px;
+        background: var(--appbar-bg);
+        color: var(--appbar-ink);
+        border-bottom: 1px solid transparent;
+      }
+      .app[data-ui="classic"] .appbar { border-bottom: 2px solid #000; }
+      .app[data-ui="ios"] .appbar {
+        border-bottom: .5px solid #d8d8de;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+      .brand .mark {
+        flex: 0 0 auto;
+        width: 40px; height: 40px;
+        border-radius: 11px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 23px; font-weight: 700;
+      }
+      .app[data-ui="app"] .brand .mark { background: rgba(255,255,255,.18); color: #fff; }
+      .app[data-ui="colourful"] .brand .mark { background: #e2622b; color: #fff; }
+      .app[data-ui="classic"] .brand .mark { background: #000; color: #fff; border-radius: 9px; }
+      .brand h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.2px; line-height: 1.15; }
+      .app[data-ui="classic"] .brand h1 { font-weight: 300; letter-spacing: -.5px; font-size: 21px; }
+      .brand p { margin: 1px 0 0; font-size: 12.5px; opacity: .75; }
+      .app[data-ui="app"] .brand p { color: #d9efe6; opacity: 1; }
+      .app[data-ui="colourful"] .brand p { color: #8a5a30; opacity: 1; }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      .ui-btn {
+        flex: 0 0 auto;
+        display: inline-flex; align-items: center; gap: 7px;
+        min-height: 40px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: var(--border-w) solid transparent;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font: inherit; font-size: 14px; font-weight: 600;
+        cursor: pointer;
+      }
+      .ui-btn svg { fill: currentColor; }
+      .app[data-ui="app"] .ui-btn { background: #ffffff; color: #0b7a5c; }
+      .app[data-ui="colourful"] .ui-btn { background: #ffffff; color: #c2531f; border-color: #f3c491; }
+      .app[data-ui="classic"] .ui-btn { background: #000; color: #fff; border-radius: 6px; }
+      .app[data-ui="ios"] .ui-btn { background: #007aff; color: #fff; }
+      .ui-btn:active { transform: scale(.97); }
 
-        input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border: 2px solid #000;
-            background-color: transparent;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            font-weight: 300;
-        }
+      /* ---------- Screens ---------- */
+      .screens { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; }
+      .screen { display: none; padding: 18px 16px 24px; }
+      .app[data-screen="calc"] .screen-calc { display: block; }
+      .app[data-screen="about"] .screen-about { display: block; }
 
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #666;
-            background-color: #f8f8f8;
-        }
+      .card {
+        background: var(--surface);
+        border: var(--border-w) solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .app[data-ui="classic"] .card { border-color: #e0e0e0; }
+      .app[data-ui="classic"] .card.input-card { border-color: #000; }
 
-        .radio-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
+      .flabel {
+        display: block;
+        font-size: var(--label-size);
+        font-weight: 600;
+        text-transform: var(--label-transform);
+        letter-spacing: var(--label-spacing);
+        color: var(--ink);
+        margin: 0 0 9px;
+      }
+      .app[data-ui="ios"] .flabel { color: var(--muted); font-weight: 500; }
+      .flabel.spaced { margin-top: 20px; }
 
-        .radio-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            background-color: transparent;
-            transition: all 0.2s ease;
-        }
+      .amount-field {
+        display: flex; align-items: center; gap: 6px;
+        background: var(--field-bg);
+        border: var(--border-w) solid var(--field-line);
+        border-radius: calc(var(--radius) - 4px);
+        padding: 4px 14px;
+      }
+      .amount-field:focus-within { border-color: var(--accent); }
+      .amount-field .rupee { font-size: 22px; font-weight: 600; color: var(--muted); }
+      .amount-field input {
+        flex: 1 1 auto; min-width: 0;
+        border: 0; background: transparent; outline: none;
+        font: inherit; font-size: 26px; font-weight: 600; color: var(--ink);
+        padding: 10px 0;
+      }
+      .amount-field input::placeholder { color: var(--muted); opacity: .6; font-weight: 400; }
 
-        .radio-item:hover {
-            background-color: #f0f0f0;
-            border-color: #000;
-        }
+      .segmented {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+        background: var(--seg-track);
+        border-radius: calc(var(--radius) - 4px);
+        padding: 3px;
+        margin-top: 16px;
+      }
+      .app[data-ui="classic"] .segmented { background: #fff; border: 2px solid #e0e0e0; padding: 0; gap: 0; overflow: hidden; }
+      .seg {
+        min-height: 44px;
+        border: 0; background: transparent; color: var(--ink);
+        font: inherit; font-size: 14.5px; font-weight: 600;
+        border-radius: calc(var(--radius) - 7px);
+        cursor: pointer; padding: 8px 6px;
+      }
+      .seg.active { background: var(--seg-on); box-shadow: 0 1px 5px rgba(0,0,0,.14); }
+      .app[data-ui="app"] .seg.active { background: var(--accent); color: #fff; box-shadow: none; }
+      .app[data-ui="colourful"] .seg.active { background: var(--accent); color: #fff; box-shadow: none; }
+      .app[data-ui="classic"] .seg { border-radius: 0; }
+      .app[data-ui="classic"] .seg.active { background: #000; color: #fff; box-shadow: none; }
 
-        .radio-item.active {
-            background-color: #000;
-            color: #fff;
-            border-color: #000;
-        }
+      .rates { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+      .rate {
+        min-height: 48px;
+        border: var(--border-w) solid var(--field-line);
+        background: var(--surface);
+        color: var(--ink);
+        border-radius: calc(var(--radius) - 4px);
+        font: inherit; font-size: 16.5px; font-weight: 600;
+        cursor: pointer;
+      }
+      .rate.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .app[data-ui="colourful"] .rate[data-rate="0"]  { background: #e8f0fe; border-color: #c3d7f7; }
+      .app[data-ui="colourful"] .rate[data-rate="5"]  { background: #e2f4e4; border-color: #b7e0bc; }
+      .app[data-ui="colourful"] .rate[data-rate="18"] { background: #fdeeda; border-color: #f6cf9a; }
+      .app[data-ui="colourful"] .rate[data-rate="40"] { background: #fde7ef; border-color: #f5bfd4; }
+      .app[data-ui="colourful"] .rate.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-        .radio-item input[type="radio"] {
-            display: none;
-        }
+      .results-card { padding-top: 8px; padding-bottom: 8px; }
+      .rrow {
+        display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .rrow:last-child { border-bottom: 0; }
+      .rrow .rl {
+        font-size: var(--label-size); font-weight: 600;
+        text-transform: var(--label-transform); letter-spacing: var(--label-spacing);
+        color: var(--ink);
+      }
+      .app[data-ui="ios"] .rrow .rl { font-weight: 500; color: var(--muted); }
+      .rrow .rv { font-size: 16.5px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .rrow.total { border-top: 2px solid var(--ink); margin-top: 2px; }
+      .app[data-ui="ios"] .rrow.total { border-top-color: var(--line); }
+      .rrow.total .rl { font-size: calc(var(--label-size) + 1.5px); }
+      .rrow.total .rv { font-size: 20px; color: var(--accent); }
+      .app[data-ui="classic"] .rrow.total .rv { color: #000; }
 
-        .radio-item label {
-            margin: 0;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-        }
+      .hint { margin: 0 2px; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
-        .gst-slabs {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
+      /* ---------- About ---------- */
+      .about-head { text-align: center; padding: 10px 0 4px; }
+      .about-head .bigmark {
+        width: 76px; height: 76px; margin: 0 auto 14px;
+        border-radius: 19px;
+        background: #000; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 44px; font-weight: 700;
+        box-shadow: 0 8px 22px rgba(0,0,0,.18);
+      }
+      .about-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+      .about-head .ver { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+      .about-card h3 {
+        margin: 0 0 8px; font-size: 15.5px; font-weight: 700;
+        text-transform: var(--label-transform); letter-spacing: var(--label-spacing);
+      }
+      .about-card p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+      .about-card p:last-child { margin-bottom: 0; }
+      .about-card .formula {
+        font-variant-numeric: tabular-nums;
+        background: var(--field-bg);
+        border: 1px solid var(--line);
+        border-radius: calc(var(--radius) - 5px);
+        padding: 10px 12px;
+        font-size: 13.5px; line-height: 1.7;
+      }
+      .rate-list { display: flex; flex-wrap: wrap; gap: 8px; }
+      .rate-list span {
+        padding: 7px 13px; border-radius: 999px;
+        background: var(--accent-soft); color: var(--ink);
+        font-size: 14px; font-weight: 600;
+      }
+      .app[data-ui="classic"] .rate-list span { background: #fff; border: 2px solid #000; border-radius: 6px; }
+      .about-foot { text-align: center; font-size: 13px; color: var(--muted); padding: 4px 0 8px; line-height: 1.7; }
+      .about-foot strong { color: var(--ink); }
 
-        .gst-btn {
-            padding: 12px;
-            border: 2px solid #000;
-            background-color: transparent;
-            color: #000;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
+      /* ---------- Tab bar ---------- */
+      .tabbar {
+        flex: 0 0 auto;
+        display: grid; grid-template-columns: 1fr 1fr;
+        background: var(--bar-bg);
+        border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .app[data-ui="classic"] .tabbar { border-top: 2px solid #000; }
+      .app[data-ui="ios"] .tabbar {
+        border-top: .5px solid #d8d8de;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      .tab {
+        min-height: 58px;
+        border: 0; background: transparent; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+        font: inherit; font-size: 11.5px; font-weight: 600;
+        color: var(--muted);
+        padding: 7px 4px 9px;
+      }
+      .tab svg { fill: currentColor; }
+      .tab.active { color: var(--tab-active); }
+      .app[data-ui="classic"] .tab.active { color: #000; }
 
-        .gst-btn:hover {
-            background-color: #f0f0f0;
-        }
+      /* ---------- UI switch sheet ---------- */
+      .backdrop {
+        position: absolute; inset: 0;
+        background: rgba(10, 14, 12, .42);
+        opacity: 0; pointer-events: none;
+        transition: opacity .22s ease;
+        z-index: 20;
+      }
+      .sheet {
+        position: absolute; left: 0; right: 0; bottom: 0;
+        background: var(--surface); color: var(--ink);
+        border-radius: 22px 22px 0 0;
+        padding: 10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+        transform: translateY(105%);
+        transition: transform .26s cubic-bezier(.32,.72,.28,1);
+        z-index: 21;
+        box-shadow: 0 -12px 34px rgba(0,0,0,.18);
+        max-height: 82%;
+        overflow-y: auto;
+      }
+      .app.sheet-open .backdrop { opacity: 1; pointer-events: auto; }
+      .app.sheet-open .sheet { transform: translateY(0); }
+      .sheet .handle { width: 38px; height: 4.5px; border-radius: 99px; background: var(--line); margin: 2px auto 14px; }
+      .sheet h2 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+      .sheet .sub { margin: 0 0 14px; font-size: 13.5px; color: var(--muted); }
+      .ui-option {
+        width: 100%;
+        display: flex; align-items: center; gap: 13px;
+        min-height: 60px;
+        padding: 10px 12px;
+        margin-bottom: 9px;
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        font: inherit; text-align: left; cursor: pointer;
+        color: var(--ink);
+      }
+      .ui-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+      .ui-option .swatch {
+        flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 19px;
+      }
+      .sw-app { background: #0b7a5c; color: #fff; }
+      .sw-classic { background: #fff; color: #000; border: 2px solid #000; }
+      .sw-colourful { background: #ffd9bd; color: #c2531f; }
+      .sw-ios { background: #007aff; color: #fff; }
+      .ui-option .ot { flex: 1 1 auto; min-width: 0; }
+      .ui-option .ot b { display: block; font-size: 15.5px; font-weight: 700; }
+      .ui-option .ot span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+      .ui-option .check { flex: 0 0 auto; width: 22px; height: 22px; fill: var(--accent); visibility: hidden; }
+      .ui-option.selected .check { visibility: visible; }
+      .sheet .done {
+        width: 100%; min-height: 48px; margin-top: 4px;
+        border: 0; border-radius: 13px;
+        background: var(--accent); color: var(--accent-ink);
+        font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer;
+      }
 
-        .gst-btn.active {
-            background-color: #000;
-            color: #fff;
-        }
-
-        .results {
-            border-top: 1px solid #eee;
-            padding-top: 25px;
-        }
-
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-
-        .result-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            font-weight: 600;
-            font-size: 18px;
-            border-top: 2px solid #000;
-            padding-top: 15px;
-        }
-
-        .result-label {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .result-value {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .credit {
-            color: #666;
-            text-align: center;
-            font-size: 14px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .calculator {
-                padding: 30px 20px;
-            }
-            
-            .gst-slabs {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            
-            .radio-group {
-                flex-direction: column;
-                gap: 12px;
-            }
-        }
+      button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) {
+        .sheet, .backdrop, .app { transition: none; }
+      }
     </style>
-</head>
-<body>
-    <div class="calculator">
-        <h1>SimpleGST</h1>
-        
-        <div class="input-group">
-            <label for="amount">Enter Amount</label>
-            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" />
+  </head>
+  <body>
+    <div class="app" id="app" data-ui="app" data-screen="calc">
+
+      <div class="statusbar" aria-hidden="true">
+        <span id="clock">9:41</span>
+        <span class="sicons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+          <svg width="16" height="11" viewBox="0 0 16 12"><path d="M8 9.6a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8zM8 5.4c1.9 0 3.7.75 5 2.05l-1.65 1.65A4.9 4.9 0 0 0 8 8.1c-1.3 0-2.5.38-3.35 1L3 7.45A7.05 7.05 0 0 1 8 5.4zM8 1c2.9 0 5.65 1.15 7.6 3.05L14 5.7A8.6 8.6 0 0 0 8 3.6c-2.25 0-4.4.8-6 2.1L.4 4.05A10.9 10.9 0 0 1 8 1z" transform="translate(0,-1)"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="15" height="8" rx="2"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4z" opacity=".45"/></svg>
+        </span>
+      </div>
+
+      <header class="appbar">
+        <div class="brand">
+          <span class="mark" aria-hidden="true">₹</span>
+          <div>
+            <h1>SimpleGST2</h1>
+            <p id="screenName">GST Calculator</p>
+          </div>
         </div>
-        
-        <div class="radio-group">
-            <div class="radio-item">
-                <input type="radio" id="taxable" name="amountType" value="taxable" checked />
-                <label for="taxable">Taxable Value</label>
+        <button class="ui-btn" id="uiBtn" type="button" aria-haspopup="dialog">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.55-.22-1.05-.59-1.41-.36-.37-.58-.86-.58-1.39 0-1.1.9-2 2-2h2.24A4.76 4.76 0 0 0 22 10.24C21.6 5.55 17.24 2 12 2zM6.5 13A1.75 1.75 0 1 1 8.25 11.25 1.75 1.75 0 0 1 6.5 13zm2-5.5A1.75 1.75 0 1 1 10.25 5.75 1.75 1.75 0 0 1 8.5 7.5zm6.5-.5A1.75 1.75 0 1 1 16.75 5.25 1.75 1.75 0 0 1 15 7z"/></svg>
+          UI
+        </button>
+      </header>
+
+      <main class="screens">
+        <!-- Calculator -->
+        <section class="screen screen-calc" aria-label="GST calculator">
+          <div class="card input-card">
+            <label class="flabel" for="amount">Enter amount</label>
+            <div class="amount-field">
+              <span class="rupee" aria-hidden="true">₹</span>
+              <input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off" />
             </div>
-            <div class="radio-item">
-                <input type="radio" id="total" name="amountType" value="total" />
-                <label for="total">Total MRP</label>
+
+            <div class="segmented" role="radiogroup" aria-label="Amount type">
+              <button class="seg active" type="button" role="radio" aria-checked="true" data-mode="taxable">Taxable Value</button>
+              <button class="seg" type="button" role="radio" aria-checked="false" data-mode="total">Total MRP</button>
             </div>
-        </div>
-        
-        <div class="input-group">
-            <label>GST Rate</label>
-            <div class="gst-slabs">
-                <button class="gst-btn active" data-rate="0">0%</button>
-                <button class="gst-btn" data-rate="5">5%</button>
-                <button class="gst-btn" data-rate="18">18%</button>
-                <button class="gst-btn" data-rate="40">40%</button>
+
+            <span class="flabel spaced" id="rateLabel">GST rate</span>
+            <div class="rates" role="radiogroup" aria-labelledby="rateLabel">
+              <button class="rate active" type="button" role="radio" aria-checked="true" data-rate="0">0%</button>
+              <button class="rate" type="button" role="radio" aria-checked="false" data-rate="5">5%</button>
+              <button class="rate" type="button" role="radio" aria-checked="false" data-rate="18">18%</button>
+              <button class="rate" type="button" role="radio" aria-checked="false" data-rate="40">40%</button>
             </div>
-        </div>
-        
-        <div class="results">
-            <div class="result-item">
-                <span class="result-label">Taxable Value</span>
-                <span class="result-value" id="taxableValue">₹0.00</span>
+          </div>
+
+          <div class="card results-card" aria-live="polite">
+            <div class="rrow">
+              <span class="rl">Taxable Value</span>
+              <span class="rv" id="rTaxable">₹0.00</span>
             </div>
-            <div class="result-item">
-                <span class="result-label">GST Amount</span>
-                <span class="result-value" id="gstAmount">₹0.00</span>
+            <div class="rrow">
+              <span class="rl">GST Amount</span>
+              <span class="rv" id="rGst">₹0.00</span>
             </div>
-            <div class="result-item">
-                <span class="result-label">Total Amount</span>
-                <span class="result-value" id="totalAmount">₹0.00</span>
+            <div class="rrow total">
+              <span class="rl">Total Amount</span>
+              <span class="rv" id="rTotal">₹0.00</span>
             </div>
-        </div>
-    </div>
-    
-    <div class="credit">
-        Made with ❤️ by sauravhhh
+          </div>
+
+          <p class="hint" id="calcHint">GST is added on top of the taxable value.</p>
+        </section>
+
+        <!-- About -->
+        <section class="screen screen-about" aria-label="About SimpleGST2">
+          <div class="about-head">
+            <div class="bigmark" aria-hidden="true">₹</div>
+            <h2>SimpleGST2</h2>
+            <p class="ver">Version 2.0</p>
+          </div>
+
+          <div class="card about-card">
+            <h3>What it does</h3>
+            <p>SimpleGST2 is a quick GST calculator for Indian tax slabs. Type an amount, pick whether it is the taxable value or the total MRP, choose the GST rate, and the taxable value, GST amount and total update instantly.</p>
+          </div>
+
+          <div class="card about-card">
+            <h3>How it calculates</h3>
+            <p><strong>Taxable Value</strong> — GST is worked out on the amount and added on top.</p>
+            <div class="formula">GST = Taxable Value × Rate ÷ 100<br />Total = Taxable Value + GST</div>
+            <p style="margin-top:12px;"><strong>Total MRP</strong> — the price already includes GST, so the calculator works backwards to find the taxable value inside it.</p>
+            <div class="formula">Taxable Value = MRP ÷ (1 + Rate ÷ 100)<br />GST = MRP − Taxable Value</div>
+          </div>
+
+          <div class="card about-card">
+            <h3>Rates supported</h3>
+            <div class="rate-list">
+              <span>0%</span><span>5%</span><span>18%</span><span>40%</span>
+            </div>
+          </div>
+
+          <div class="card about-card">
+            <h3>Appearance</h3>
+            <p>Current UI style: <strong id="aboutUiName">App</strong>. Change it any time with the UI button at the top — App, Classic, Colourful and iOS styles are built in.</p>
+          </div>
+
+          <p class="about-foot">SimpleGST2 · GST calculator<br />Made by <strong>Saurabh Saha</strong></p>
+        </section>
+      </main>
+
+      <nav class="tabbar" aria-label="Main">
+        <button class="tab active" type="button" data-nav="calc" aria-current="page">
+          <svg width="23" height="23" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 1a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H6zm1.5 3h9A.5.5 0 0 1 17 4.5v3a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 7 7.5v-3a.5.5 0 0 1 .5-.5zM7 11h3v3H7v-3zm5 0h3v3h-3v-3zm5 0h3v3h-3v-3zM7 15.5h3V19H7v-3.5zm5 0h3V19h-3v-3.5zm5 0h3V19h-3v-3.5z" transform="scale(0.92) translate(1,0.5)"/></svg>
+          Calculator
+        </button>
+        <button class="tab" type="button" data-nav="about">
+          <svg width="23" height="23" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-.1 6.2a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7zM13.4 17.6a.9.9 0 0 1-1.72.4l-1.05-4.2a.9.9 0 0 1 1.75-.43l1.02 4.23z" transform="scale(0.92) translate(1,0.5)"/></svg>
+          About
+        </button>
+      </nav>
+
+      <div class="backdrop" id="backdrop"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+        <div class="handle" aria-hidden="true"></div>
+        <h2 id="sheetTitle">UI style</h2>
+        <p class="sub">Pick how SimpleGST2 looks. It changes right away.</p>
+
+        <button class="ui-option selected" type="button" data-set-ui="app">
+          <span class="swatch sw-app" aria-hidden="true">₹</span>
+          <span class="ot"><b>App</b><span>Native app look — coloured bar, cards, bottom tabs</span></span>
+          <svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l-1.5 1.4 5.8 5.8 12-12-1.4-1.4z"/></svg>
+        </button>
+        <button class="ui-option" type="button" data-set-ui="classic">
+          <span class="swatch sw-classic" aria-hidden="true">₹</span>
+          <span class="ot"><b>Classic</b><span>The original minimal black-and-white</span></span>
+          <svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l-1.5 1.4 5.8 5.8 12-12-1.4-1.4z"/></svg>
+        </button>
+        <button class="ui-option" type="button" data-set-ui="colourful">
+          <span class="swatch sw-colourful" aria-hidden="true">₹</span>
+          <span class="ot"><b>Colourful</b><span>Light colours — soft peach, pastel rate keys</span></span>
+          <svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l-1.5 1.4 5.8 5.8 12-12-1.4-1.4z"/></svg>
+        </button>
+        <button class="ui-option" type="button" data-set-ui="ios">
+          <span class="swatch sw-ios" aria-hidden="true">₹</span>
+          <span class="ot"><b>iOS</b><span>iPhone style — grouped lists, iOS blue</span></span>
+          <svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 16.6 4.9 12.3l-1.5 1.4 5.8 5.8 12-12-1.4-1.4z"/></svg>
+        </button>
+
+        <button class="done" id="sheetDone" type="button">Done</button>
+      </div>
     </div>
 
     <script>
-        let currentGstRate = 0;
+      var app = document.getElementById('app');
+      var amountInput = document.getElementById('amount');
+      var segs = document.querySelectorAll('.seg');
+      var rateBtns = document.querySelectorAll('.rate');
+      var rTaxable = document.getElementById('rTaxable');
+      var rGst = document.getElementById('rGst');
+      var rTotal = document.getElementById('rTotal');
+      var hint = document.getElementById('calcHint');
+      var screenName = document.getElementById('screenName');
+      var aboutUiName = document.getElementById('aboutUiName');
 
-        const amountInput = document.getElementById('amount');
-        const taxableRadio = document.getElementById('taxable');
-        const totalRadio = document.getElementById('total');
-        const gstButtons = document.querySelectorAll('.gst-btn');
-        const taxableValueDisplay = document.getElementById('taxableValue');
-        const gstAmountDisplay = document.getElementById('gstAmount');
-        const totalAmountDisplay = document.getElementById('totalAmount');
+      var mode = 'taxable';
+      var rate = 0;
+      var inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        function formatCurrency(amount) {
-            return `₹${amount.toFixed(2)}`;
+      function calculate() {
+        var amount = parseFloat(amountInput.value) || 0;
+        if (amount < 0) amount = 0;
+        var taxable, gst, total;
+        if (mode === 'taxable') {
+          taxable = amount;
+          gst = taxable * rate / 100;
+          total = taxable + gst;
+          hint.textContent = 'GST is added on top of the taxable value.';
+        } else {
+          total = amount;
+          taxable = total / (1 + rate / 100);
+          gst = total - taxable;
+          hint.textContent = 'The MRP already includes GST — this is the taxable value inside it.';
         }
+        rTaxable.textContent = inr.format(taxable);
+        rGst.textContent = inr.format(gst);
+        rTotal.textContent = inr.format(total);
+      }
 
-        function setActiveRadio() {
-            document.querySelectorAll('.radio-item').forEach(item => {
-                const radio = item.querySelector('input[type="radio"]');
-                item.classList.toggle('active', radio.checked);
-            });
-        }
+      amountInput.addEventListener('input', calculate);
 
-        function calculateGST() {
-            const amount = parseFloat(amountInput.value) || 0;
-            const isTaxableValue = taxableRadio.checked;
-
-            let taxableValue, gstAmount, totalAmount;
-
-            if (isTaxableValue) {
-                // Forward calculation: Taxable Value → Total
-                taxableValue = amount;
-                gstAmount = (taxableValue * currentGstRate) / 100;
-                totalAmount = taxableValue + gstAmount;
-            } else {
-                // Reverse calculation: Total → Taxable Value
-                totalAmount = amount;
-                taxableValue = totalAmount / (1 + currentGstRate / 100);
-                gstAmount = totalAmount - taxableValue;
-            }
-
-            taxableValueDisplay.textContent = formatCurrency(taxableValue);
-            gstAmountDisplay.textContent = formatCurrency(gstAmount);
-            totalAmountDisplay.textContent = formatCurrency(totalAmount);
-        }
-
-        function setActiveGstRate(rate) {
-            currentGstRate = rate;
-            gstButtons.forEach(btn => {
-                btn.classList.toggle('active', parseInt(btn.dataset.rate) === rate);
-            });
-            calculateGST();
-        }
-
-        // Event listeners
-        amountInput.addEventListener('input', calculateGST);
-        taxableRadio.addEventListener('change', () => {
-            setActiveRadio();
-            calculateGST();
+      segs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          mode = btn.getAttribute('data-mode');
+          segs.forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-checked', on ? 'true' : 'false');
+          });
+          calculate();
         });
-        totalRadio.addEventListener('change', () => {
-            setActiveRadio();
-            calculateGST();
+      });
+
+      rateBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          rate = parseInt(btn.getAttribute('data-rate'), 10);
+          rateBtns.forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-checked', on ? 'true' : 'false');
+          });
+          calculate();
         });
+      });
 
-        // Add click handlers for radio items
-        document.querySelectorAll('.radio-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const radio = item.querySelector('input[type="radio"]');
-                radio.checked = true;
-                setActiveRadio();
-                calculateGST();
-            });
+      /* --- Screens (bottom tabs) --- */
+      var tabs = document.querySelectorAll('.tab');
+      var screensEl = document.querySelector('.screens');
+      function goTo(screen) {
+        app.setAttribute('data-screen', screen);
+        screenName.textContent = screen === 'calc' ? 'GST Calculator' : 'About';
+        tabs.forEach(function (t) {
+          var on = t.getAttribute('data-nav') === screen;
+          t.classList.toggle('active', on);
+          if (on) { t.setAttribute('aria-current', 'page'); } else { t.removeAttribute('aria-current'); }
         });
+        screensEl.scrollTop = 0;
+      }
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () { goTo(t.getAttribute('data-nav')); });
+      });
 
-        gstButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const rate = parseInt(btn.dataset.rate);
-                setActiveGstRate(rate);
-            });
+      /* --- UI switch sheet --- */
+      var sheet = document.getElementById('sheet');
+      var backdrop = document.getElementById('backdrop');
+      var uiBtn = document.getElementById('uiBtn');
+      var doneBtn = document.getElementById('sheetDone');
+      var options = document.querySelectorAll('.ui-option');
+      var uiNames = { app: 'App', classic: 'Classic', colourful: 'Colourful', ios: 'iOS' };
+
+      function openSheet() {
+        sheet.hidden = false;
+        requestAnimationFrame(function () { app.classList.add('sheet-open'); });
+        doneBtn.focus();
+      }
+      function closeSheet() {
+        app.classList.remove('sheet-open');
+        setTimeout(function () { sheet.hidden = true; }, 280);
+        uiBtn.focus();
+      }
+      uiBtn.addEventListener('click', openSheet);
+      doneBtn.addEventListener('click', closeSheet);
+      backdrop.addEventListener('click', closeSheet);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+      });
+
+      options.forEach(function (opt) {
+        opt.addEventListener('click', function () {
+          var ui = opt.getAttribute('data-set-ui');
+          app.setAttribute('data-ui', ui);
+          aboutUiName.textContent = uiNames[ui];
+          options.forEach(function (o) { o.classList.toggle('selected', o === opt); });
         });
+      });
 
-        // Initialize
-        setActiveRadio();
-        calculateGST();
+      /* --- Status bar clock --- */
+      var clock = document.getElementById('clock');
+      function tick() {
+        var d = new Date();
+        var h = d.getHours() % 12; if (h === 0) h = 12;
+        var m = d.getMinutes(); if (m < 10) m = '0' + m;
+        clock.textContent = h + ':' + m;
+      }
+      tick();
+      setInterval(tick, 20000);
 
-        // PWA service worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('sw.js').catch(function (err) {
-                    console.warn('SW registration failed:', err);
-                });
-            });
-        }
+      calculate();
     </script>
-</body>
-                    </html>
+  </body>
+</html>
