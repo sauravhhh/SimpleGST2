@@ -142,22 +142,6 @@
         --tab-active: #007aff;
       }
 
-      /* ---------- Status bar ---------- */
-      .statusbar {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: calc(8px + env(safe-area-inset-top, 0px)) 22px 2px;
-        background: var(--appbar-bg);
-        color: var(--appbar-ink);
-        font-size: 13.5px;
-        font-weight: 600;
-        letter-spacing: .2px;
-      }
-      .statusbar .sicons { display: flex; align-items: center; gap: 6px; }
-      .statusbar svg { display: block; fill: currentColor; }
-
       /* ---------- App bar ---------- */
       .appbar {
         flex: 0 0 auto;
@@ -165,7 +149,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 8px 16px 14px;
+        padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 14px;
         background: var(--appbar-bg);
         color: var(--appbar-ink);
         border-bottom: 1px solid transparent;
@@ -450,15 +434,6 @@
   <body>
     <div class="app" id="app" data-ui="app" data-screen="calc">
 
-      <div class="statusbar" aria-hidden="true">
-        <span id="clock">9:41</span>
-        <span class="sicons">
-          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
-          <svg width="16" height="11" viewBox="0 0 16 12"><path d="M8 9.6a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8zM8 5.4c1.9 0 3.7.75 5 2.05l-1.65 1.65A4.9 4.9 0 0 0 8 8.1c-1.3 0-2.5.38-3.35 1L3 7.45A7.05 7.05 0 0 1 8 5.4zM8 1c2.9 0 5.65 1.15 7.6 3.05L14 5.7A8.6 8.6 0 0 0 8 3.6c-2.25 0-4.4.8-6 2.1L.4 4.05A10.9 10.9 0 0 1 8 1z" transform="translate(0,-1)"/></svg>
-          <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="15" height="8" rx="2"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4z" opacity=".45"/></svg>
-        </span>
-      </div>
-
       <header class="appbar">
         <div class="brand">
           <span class="mark" aria-hidden="true">₹</span>
@@ -706,17 +681,6 @@
           options.forEach(function (o) { o.classList.toggle('selected', o === opt); });
         });
       });
-
-      /* --- Status bar clock --- */
-      var clock = document.getElementById('clock');
-      function tick() {
-        var d = new Date();
-        var h = d.getHours() % 12; if (h === 0) h = 12;
-        var m = d.getMinutes(); if (m < 10) m = '0' + m;
-        clock.textContent = h + ':' + m;
-      }
-      tick();
-      setInterval(tick, 20000);
 
       calculate();
     </script>
